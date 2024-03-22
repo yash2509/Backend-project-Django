@@ -8,7 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 from DeliveryApp.models import MenuItem, Category, Cart, Order, OrderItem
 from DeliveryApp.serializers import MenuSerializer, CategorySerializer, CartSerializer, Order_Serializer, \
@@ -25,7 +26,8 @@ def category_api(request):
             serializer_item.save()
             return Response(serializer_item.data, status=status.HTTP_200_OK)
 @api_view(['GET','POST'])
-# @permission_classes(([IsAuthenticated]))
+@permission_classes(([IsAuthenticated]))
+@throttle_classes([UserRateThrottle])
 def menu_api(request):
     if request.method=='GET':
         menu=MenuItem.objects.all()
@@ -60,7 +62,7 @@ def menu_api(request):
         else:
             return Response("Access Denied", status=status.HTTP_401_UNAUTHORIZED)
 @api_view(['GET','PUT','PATCH','DELETE'])
-# @permission_classes(([IsAuthenticated]))
+@permission_classes(([IsAuthenticated]))
 def single_menu_item(request,id):
     menu = get_object_or_404(MenuItem, pk=id)
     if request.method=='GET':
@@ -82,9 +84,9 @@ def single_menu_item(request,id):
             return Response(status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-from rest_framework.authtoken.admin import User
 @api_view(['GET','POST','DELETE'])
 # @permission_classes(([IsAuthenticated]))
+@throttle_classes([UserRateThrottle])
 def cart_item(request):
     if request.method=='GET':
         cart = Cart.objects.filter(user=request.user)
@@ -165,6 +167,7 @@ def order(request,id):
         order=Order.objects.filter(user=request.user,id=id)
         order.delete()
         return Response(status=status.HTTP_200_OK)
+
 
 
 
